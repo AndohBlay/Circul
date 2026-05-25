@@ -106,6 +106,7 @@ return [
      */
 
     'register_permission_check_method' => true,
+    'guard_name' => 'api',
 
     /*
      * When set to true, Laravel\Octane\Events\OperationTerminated event listener will be registered
