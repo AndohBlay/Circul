@@ -30,23 +30,26 @@ class AuthController extends Controller
             'user'    => $user,
         ], 201);
     }
-
- public function login(LoginRequest $request): JsonResponse
+public function login(LoginRequest $request): JsonResponse
 {
     $loginField = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
 
-    $credentials = [
-        $loginField => $request->login,
-        'password'  => $request->password,
-    ];
+    $user = User::where($loginField, $request->login)->first();
 
-    if (!Auth::attempt($credentials)) {
-        return response()->json([
-            'message' => 'Invalid credentials',
-        ], 401);
+    if (!$user) {
+        return response()->json(['message' => 'Invalid credentials'], 401);
     }
 
-    $user  = Auth::user();
+    if ($user->provider && !$user->password) {
+        return response()->json([
+            'message' => 'This account uses ' . $user->provider . ' login. Please sign in with ' . $user->provider . '.',
+        ], 422);
+    }
+
+    if (!\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+        return response()->json(['message' => 'Invalid credentials'], 401);
+    }
+
     $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
@@ -55,7 +58,6 @@ class AuthController extends Controller
         'user'    => $user,
     ]);
 }
-
     public function logout(): JsonResponse
     {
         Auth::user()->currentAccessToken()->delete();
