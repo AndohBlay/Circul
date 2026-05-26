@@ -9,18 +9,48 @@ use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     // Public - anyone can view products
-    public function index(): JsonResponse
-    {
-        $products = Product::with(['category', 'images'])
-            ->where('is_active', true)
-            ->paginate(15);
+public function index(Request $request): JsonResponse
+{
+    $query = Product::with(['category', 'images'])
+        ->where('is_active', true);
 
-        return response()->json($products);
+    // Filter by category
+    if ($request->has('category_id')) {
+        $query->where('category_id', $request->category_id);
     }
+
+    // Filter by price range
+    if ($request->has('min_price')) {
+        $query->where('price', '>=', $request->min_price);
+    }
+
+    if ($request->has('max_price')) {
+        $query->where('price', '<=', $request->max_price);
+    }
+
+    // Search by name
+    if ($request->has('search')) {
+        $query->where('name', 'like', '%' . $request->search . '%');
+    }
+
+    // Sort
+    $sortBy = $request->get('sort_by', 'created_at');
+    $sortOrder = $request->get('sort_order', 'desc');
+    $allowedSorts = ['name', 'price', 'created_at', 'stock_quantity'];
+
+    if (in_array($sortBy, $allowedSorts)) {
+        $query->orderBy($sortBy, $sortOrder);
+    }
+
+    $products = $query->paginate($request->get('per_page', 15));
+
+    return response()->json($products);
+}
 
     public function show($id): JsonResponse
     {
