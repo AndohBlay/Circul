@@ -5,10 +5,14 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Paystack webhook 
+Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
 
 // Social Auth
 Route::get('/auth/google/redirect', [SocialAuthController::class, 'redirectToGoogle']);
@@ -28,6 +32,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::put('/orders/{id}/cancel', [OrderController::class, 'cancel']);
+
+    // Payment routes (any authenticated client)
+    Route::post('/payments/initialize', [PaymentController::class, 'initializeFullPayment']);
+    Route::post('/payments/verify', [PaymentController::class, 'verifyFullPayment']);
 
     // Admin only routes
     Route::middleware('role:admin|superadmin')->group(function () {
