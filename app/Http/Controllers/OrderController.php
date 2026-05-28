@@ -8,6 +8,7 @@ use App\Http\Requests\StoreOrderRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request; 
 
 class OrderController extends Controller
 {
@@ -112,4 +113,47 @@ class OrderController extends Controller
             'message' => 'Order cancelled successfully',
         ]);
     }
+
+    // Admin - get all orders
+public function adminIndex(Request $request): JsonResponse
+{
+    $query = Order::with(['items.product', 'user', 'payments'])
+        ->latest();
+
+    // Filter by status
+    if ($request->has('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // Filter by payment type
+    if ($request->has('payment_type')) {
+        $query->where('payment_type', $request->payment_type);
+    }
+
+    // Filter by user
+    if ($request->has('user_id')) {
+        $query->where('user_id', $request->user_id);
+    }
+
+    $orders = $query->paginate(15);
+
+    return response()->json($orders);
+}
+
+// Admin - update order status
+public function updateStatus(Request $request, $id): JsonResponse
+{
+    $request->validate([
+        'status' => 'required|in:pending,paid,partially_paid,shipped,cancelled',
+    ]);
+
+    $order = Order::findOrFail($id);
+    $order->update(['status' => $request->status]);
+
+    return response()->json([
+        'message' => 'Order status updated successfully',
+        'order'   => $order,
+    ]);
+}
+
 }
