@@ -47,4 +47,9 @@ return [
     'payment_url' => env('PAYSTACK_PAYMENT_URL', 'https://api.paystack.co'),
 ],
 
+'arkesel' => [
+    'api_key'   => env('ARKESEL_API_KEY'),
+    'sender_id' => env('ARKESEL_SENDER_ID', 'Circul'),
+],
+
 ];
