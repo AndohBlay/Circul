@@ -6,12 +6,13 @@ use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\InstallmentController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Paystack webhook 
+// Paystack webhook (public)
 Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
 
 // Social Auth
@@ -33,9 +34,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::put('/orders/{id}/cancel', [OrderController::class, 'cancel']);
 
-    // Payment routes (any authenticated client)
+    // Payment routes
     Route::post('/payments/initialize', [PaymentController::class, 'initializeFullPayment']);
     Route::post('/payments/verify', [PaymentController::class, 'verifyFullPayment']);
+
+    // Installment routes
+    Route::post('/installments/plan', [InstallmentController::class, 'createPlan']);
+    Route::get('/installments', [InstallmentController::class, 'myPlans']);
+    Route::get('/installments/{planId}', [InstallmentController::class, 'show']);
+    Route::post('/installments/schedule/{scheduleId}/pay', [InstallmentController::class, 'initializeSchedulePayment']);
+    Route::post('/installments/verify', [InstallmentController::class, 'verifySchedulePayment']);
 
     // Admin only routes
     Route::middleware('role:admin|superadmin')->group(function () {
