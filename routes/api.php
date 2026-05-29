@@ -12,6 +12,8 @@ use App\Http\Controllers\AdminDashboardController;
 // Public routes
 Route::middleware('throttle:register')->post('/register', [AuthController::class, 'register']);
 Route::middleware('throttle:login')->post('/login', [AuthController::class, 'login']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 
 // Paystack webhook (public)
 Route::post('/payments/webhook', [PaymentController::class, 'webhook']);

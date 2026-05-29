@@ -19,6 +19,9 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'phone_verified_at',
+        'otp_code',
+        'otp_expires_at',
         'avatar',
         'provider',
         'provider_id',
@@ -27,13 +30,21 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'otp_code',
     ];
 
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'otp_expires_at'    => 'datetime',
             'password'          => 'hashed',
         ];
+    }
+
+    public function hasVerifiedPhone(): bool
+    {
+        return $this->phone_verified_at !== null;
     }
 }
