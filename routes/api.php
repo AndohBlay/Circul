@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InstallmentController;
+use App\Http\Controllers\AdminDashboardController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -53,4 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/orders', [OrderController::class, 'adminIndex']);
         Route::put('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
     });
+
+    // Admin dashboard
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'stats']);
+        Route::get('/admin/dashboard/low-stock', [AdminDashboardController::class, 'lowStockProducts']);
+        Route::get('/admin/dashboard/overdue-installments', [AdminDashboardController::class, 'overdueInstallments']);
 });
