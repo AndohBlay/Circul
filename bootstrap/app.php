@@ -3,6 +3,11 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,9 +23,43 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
-            if ($request->expectsJson() || $request->is('api/*')) {
+
+        // Unauthenticated
+        $exceptions->render(function (AuthenticationException $e, $request) {
+            if ($request->is('api/*')) {
                 return response()->json(['message' => 'Unauthenticated'], 401);
             }
         });
+
+        // Validation errors
+        $exceptions->render(function (ValidationException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors'  => $e->errors(),
+                ], 422);
+            }
+        });
+
+        // Route not found
+        $exceptions->render(function (NotFoundHttpException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Resource not found'], 404);
+            }
+        });
+
+        // Method not allowed
+        $exceptions->render(function (MethodNotAllowedHttpException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Method not allowed'], 405);
+            }
+        });
+
+        // Unauthorized role
+        $exceptions->render(function (UnauthorizedException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Access denied. You do not have the required role.'], 403);
+            }
+        });
+
     })->create();

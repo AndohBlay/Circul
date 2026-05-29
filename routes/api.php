@@ -10,8 +10,8 @@ use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\AdminDashboardController;
 
 // Public routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('throttle:register')->post('/register', [AuthController::class, 'register']);
+Route::middleware('throttle:login')->post('/login', [AuthController::class, 'login']);
 
 // Paystack webhook (public)
 Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
@@ -53,10 +53,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/admin/products/{id}', [ProductController::class, 'destroy']);
         Route::get('/admin/orders', [OrderController::class, 'adminIndex']);
         Route::put('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
-    });
-
-    // Admin dashboard
-    Route::get('/admin/dashboard', [AdminDashboardController::class, 'stats']);
+        Route::get('/admin/dashboard', [AdminDashboardController::class, 'stats']);
         Route::get('/admin/dashboard/low-stock', [AdminDashboardController::class, 'lowStockProducts']);
         Route::get('/admin/dashboard/overdue-installments', [AdminDashboardController::class, 'overdueInstallments']);
+    });
 });
