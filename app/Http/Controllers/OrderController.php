@@ -91,6 +91,41 @@ class OrderController extends Controller
         return response()->json($order);
     }
 
+    // Public tracker to check shipping fulfillment stages using order numbers
+    public function trackByNumber(Request $request): JsonResponse
+    {
+        $request->validate([
+            'order_number' => 'required|string|exists:orders,order_number',
+        ]);
+
+        $order = Order::where('order_number', $request->order_number)
+            ->select('id', 'order_number', 'status', 'total_amount', 'created_at', 'updated_at')
+            ->firstOrFail();
+
+        return response()->json([
+            'message'      => 'Order tracking profile retrieved successfully.',
+            'order_number' => $order->order_number,
+            'status'       => $order->status,
+            'placed_at'    => $order->created_at->toIso8601String(),
+            'last_updated' => $order->updated_at->toIso8601String(),
+        ]);
+    }
+
+    // Retrieve full past authenticated profile invoice purchasing timelines
+    public function myHistory(): JsonResponse
+    {
+        $orders = Order::where('user_id', Auth::id())
+            ->with(['items.product'])
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'message' => 'User order history profile loaded successfully.',
+            'total'   => $orders->count(),
+            'history' => $orders,
+        ]);
+    }
+
     public function cancel($id): JsonResponse
     {
         $order = Order::where('user_id', Auth::id())
@@ -115,45 +150,44 @@ class OrderController extends Controller
     }
 
     // Admin - get all orders
-public function adminIndex(Request $request): JsonResponse
-{
-    $query = Order::with(['items.product', 'user', 'payments'])
-        ->latest();
+    public function adminIndex(Request $request): JsonResponse
+    {
+        $query = Order::with(['items.product', 'user', 'payments'])
+            ->latest();
 
-    // Filter by status
-    if ($request->has('status')) {
-        $query->where('status', $request->status);
+        // Filter by status
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by payment type
+        if ($request->has('payment_type')) {
+            $query->where('payment_type', $request->payment_type);
+        }
+
+        // Filter by user
+        if ($request->has('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        $orders = $query->paginate(15);
+
+        return response()->json($orders);
     }
 
-    // Filter by payment type
-    if ($request->has('payment_type')) {
-        $query->where('payment_type', $request->payment_type);
+    // Admin - update order status
+    public function updateStatus(Request $request, $id): JsonResponse
+    {
+        $request->validate([
+            'status' => 'required|in:pending,paid,partially_paid,shipped,cancelled',
+        ]);
+
+        $order = Order::findOrFail($id);
+        $order->update(['status' => $request->status]);
+
+        return response()->json([
+            'message' => 'Order status updated successfully',
+            'order'   => $order,
+        ]);
     }
-
-    // Filter by user
-    if ($request->has('user_id')) {
-        $query->where('user_id', $request->user_id);
-    }
-
-    $orders = $query->paginate(15);
-
-    return response()->json($orders);
-}
-
-// Admin - update order status
-public function updateStatus(Request $request, $id): JsonResponse
-{
-    $request->validate([
-        'status' => 'required|in:pending,paid,partially_paid,shipped,cancelled',
-    ]);
-
-    $order = Order::findOrFail($id);
-    $order->update(['status' => $request->status]);
-
-    return response()->json([
-        'message' => 'Order status updated successfully',
-        'order'   => $order,
-    ]);
-}
-
 }

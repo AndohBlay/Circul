@@ -7,11 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     protected $fillable = [
+        'order_number',
         'user_id',
         'status',
         'payment_type',
         'total_amount',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($order) {
+            $order->order_number = 'CRCL-' . date('Y') . '-' . strval(random_int(100000, 999999));
+        });
+    }
 
     public function user()
     {
