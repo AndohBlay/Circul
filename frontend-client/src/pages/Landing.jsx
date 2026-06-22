@@ -6,9 +6,11 @@ import CycleRing from "../components/CycleRing";
 import ProductCard from "../components/ProductCard";
 import { productsApi } from "../api/products";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 export default function Landing() {
   const { user } = useAuth();
+  const { addItem } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +69,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Featured phones — live from the catalog, no mock data */}
+      {/* Featured phones */}
       <section className="border-t border-border">
         <div className="mx-auto max-w-6xl px-5 sm:px-8 py-16">
           <div className="flex items-end justify-between mb-8">
@@ -89,7 +91,7 @@ export default function Landing() {
           {!loading && products.length > 0 && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
               {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard key={p.id} product={p} onAddToCart={() => addItem(p)} />
               ))}
             </div>
           )}
