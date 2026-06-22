@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  /* Same token system as frontend-client — keeps the two apps visually one ecosystem */
+  --color-ink: #0b0f1a;
+  --color-surface: #131a2b;
+  --color-surface-raised: #1b2438;
+  --color-border: #262f47;
+
+  --color-amber: #f2a93b;
+  --color-amber-dim: #c98a2c;
+  --color-mint: #34d399;
+  --color-coral: #f0654f;
+
+  --color-text: #f5f3ee;
+  --color-text-muted: #7c8499;
+  --color-text-faint: #4d5570;
+
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-amber);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
