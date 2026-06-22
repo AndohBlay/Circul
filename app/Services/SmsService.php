@@ -29,7 +29,7 @@ class SmsService
 
             $result = $response->json();
 
-            if (isset($result['status']) && $result['status'] === 'success') {
+            if (isset($result['code']) && $result['code'] === 'ok') {
                 return true;
             }
 

@@ -17,16 +17,13 @@ class AuthController extends Controller
 {
     protected SmsService $sms;
 
-    // Inject SMS service dependency directly into constructor
     public function __construct(SmsService $sms)
     {
         $this->sms = $sms;
     }
 
-    // Register a new client profile and send verification parameters
     public function register(RegisterRequest $request): JsonResponse
     {
-    
         $existingPhone = User::where('phone', $request->phone)->exists();
         if ($existingPhone) {
             return response()->json([
@@ -34,7 +31,6 @@ class AuthController extends Controller
             ], 422);
         }
 
-       
         $existingEmail = User::where('email', $request->email)->exists();
         if ($existingEmail) {
             return response()->json([
@@ -67,7 +63,6 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // Verify system validation request flags match active session codes
     public function verifyOtp(Request $request): JsonResponse
     {
         $request->validate([
@@ -100,11 +95,10 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Phone verified successfully',
             'token'   => $token,
-            'user'    => $user,
+            'user'    => $user->load('roles'),
         ]);
     }
 
-    // Regenerate explicit authentication code structures for targets
     public function resendOtp(Request $request): JsonResponse
     {
         $request->validate([
@@ -135,7 +129,6 @@ class AuthController extends Controller
         ]);
     }
 
-    // Dispatch a password reset token straight to user phone number
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate([
@@ -152,7 +145,6 @@ class AuthController extends Controller
             'otp_expires_at' => $expires,
         ]);
 
-        // Route code over SMS service ensuring fluid access flow
         $this->sms->send(
             $user->phone,
             "Your Circul password reset code is: {$otp}. It expires in 15 minutes."
@@ -164,7 +156,6 @@ class AuthController extends Controller
         ]);
     }
 
-    // Consume validation parameters to update account security elements
     public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
@@ -194,7 +185,6 @@ class AuthController extends Controller
         ]);
     }
 
-    // Process parameters matching user collection to verify access
     public function login(LoginRequest $request): JsonResponse
     {
         $loginField = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
@@ -227,11 +217,10 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login successful',
             'token'   => $token,
-            'user'    => $user,
+            'user'    => $user->load('roles'),
         ]);
     }
 
-    // Clear matching tokens from tracking rows during session logout
     public function logout(): JsonResponse
     {
         Auth::user()->currentAccessToken()->delete();
@@ -241,7 +230,22 @@ class AuthController extends Controller
         ]);
     }
 
-    // Modify the active password credentials for the currently logged in account
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name'  => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . Auth::id(),
+        ]);
+
+        $user = Auth::user();
+        $user->update($request->only(['name', 'email']));
+
+        return response()->json([
+            'message' => 'Profile updated successfully.',
+            'user'    => $user->load('roles'),
+        ]);
+    }
+
     public function changePassword(Request $request): JsonResponse
     {
         $request->validate([
@@ -268,6 +272,6 @@ class AuthController extends Controller
 
     public function me(): JsonResponse
     {
-        return response()->json(Auth::user());
+        return response()->json(Auth::user()->load('roles'));
     }
 }

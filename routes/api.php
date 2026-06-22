@@ -4,9 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InstallmentController;
+use App\Http\Controllers\IdentityVerificationController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\SuperAdminController;
 
@@ -25,6 +27,7 @@ Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleC
 // Public inventory display routes
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::get('/categories', [CategoryController::class, 'index']);
 
 // Public order status tracking endpoint
 Route::get('/orders/track', [OrderController::class, 'trackByNumber']);
@@ -35,7 +38,7 @@ Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
 // Authenticated user route endpoints group
 // Applied 'throttle:api' here to cover all authenticated client and admin requests
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
-    
+
     // User session management actions
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
@@ -44,6 +47,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     // Client order placement operations
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::get('/user/orders/history', [OrderController::class, 'myHistory']);
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel']);
 
@@ -58,6 +62,10 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('/installments/schedule/{scheduleId}/pay', [InstallmentController::class, 'initializeSchedulePayment']);
     Route::post('/installments/verify', [InstallmentController::class, 'verifySchedulePayment']);
 
+    // Client identity (Ghana Card / KYC) verification submission + status check
+    Route::post('/identity/submit', [IdentityVerificationController::class, 'submitIdentity']);
+    Route::get('/identity/status', [IdentityVerificationController::class, 'checkMyStatus']);
+
     // Joint operational admin and superadmin route group
     Route::middleware('role:admin|superadmin')->group(function () {
         Route::post('/admin/products', [ProductController::class, 'store']);
@@ -68,6 +76,10 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('/admin/dashboard', [AdminDashboardController::class, 'stats']);
         Route::get('/admin/dashboard/low-stock', [AdminDashboardController::class, 'lowStockProducts']);
         Route::get('/admin/dashboard/overdue-installments', [AdminDashboardController::class, 'overdueInstallments']);
+
+        // Staff review queue for client identity verification submissions
+        Route::get('/admin/identity-verifications', [IdentityVerificationController::class, 'adminIndex']);
+        Route::put('/admin/identity-verifications/{id}/review', [IdentityVerificationController::class, 'reviewIdentity']);
     });
 
     // Executive level superadmin only management group

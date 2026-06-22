@@ -21,15 +21,15 @@ class RoleAndPermissionSeeder extends Seeder
         $superadminRole = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'api']);
 
         // Force create or overwrite the master supervisor account row properties
-        $superadmin = User::updateOrCreate(
-            ['email' => 'admin@circul.com'],
-            [  'name'              => 'admin'],
-            [   'name'              => 'admin',
-                'phone'             => '+233240000000',
-                'password'          => Hash::make('Admin@1234'),
-                'phone_verified_at' => now(),
-            ]
-        );
+     $superadmin = User::updateOrCreate(
+    ['email' => 'admin@circul.com'],
+    [
+        'name'              => 'admin',
+        'phone'             => '+233240000000',
+        'password'          => Hash::make('Admin@1234'),
+        'phone_verified_at' => now(),
+    ]
+);
 
         // Ensure the primary account carries the superadmin privileges
         if (!$superadmin->hasRole('superadmin')) {
