@@ -1,16 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { X, ImagePlus } from "lucide-react";
-import { categoriesApi } from "../../api/categories";
 import { storageURL } from "../../api/client";
 
-const empty = { name: "", category_id: "", description: "", price: "", stock_quantity: "", is_active: true };
+const empty = {
+  name: "",
+  installation_type: "",
+  description: "",
+  price: "",
+  stock_quantity: "",
+  is_active: true,
+};
 
 export default function ProductFormModal({ open, onClose, onSubmit, initial }) {
   const [form, setForm] = useState(empty);
-  const [categories, setCategories] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  // Image state
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const fileRef = useRef();
@@ -19,7 +23,6 @@ export default function ProductFormModal({ open, onClose, onSubmit, initial }) {
     setForm(initial ? { ...empty, ...initial } : empty);
     setError("");
     setImageFile(null);
-    // Show existing primary image when editing
     if (initial) {
       const imgs = initial.images ?? initial.product_images ?? [];
       const primary = imgs.find((i) => i.is_primary) ?? imgs[0];
@@ -33,11 +36,6 @@ export default function ProductFormModal({ open, onClose, onSubmit, initial }) {
       setImagePreview(null);
     }
   }, [initial, open]);
-
-  useEffect(() => {
-    if (!open) return;
-    categoriesApi.list().then(({ data }) => setCategories(data)).catch(() => setCategories([]));
-  }, [open]);
 
   if (!open) return null;
 
@@ -58,7 +56,6 @@ export default function ProductFormModal({ open, onClose, onSubmit, initial }) {
     setSaving(true);
     setError("");
     try {
-      // If an image was selected, send as multipart/form-data
       if (imageFile) {
         const fd = new FormData();
         Object.entries(form).forEach(([k, v]) => fd.append(k, v));
@@ -131,18 +128,18 @@ export default function ProductFormModal({ open, onClose, onSubmit, initial }) {
 
             <Field label="Name" value={form.name} onChange={update("name")} required />
 
+            {/* Installation type only — no category dropdown */}
             <label className="block">
-              <span className="font-body text-sm text-text-muted mb-1.5 block">Category</span>
+              <span className="font-body text-sm text-text-muted mb-1.5 block">Installation</span>
               <select
-                value={form.category_id}
-                onChange={update("category_id")}
+                value={form.installation_type}
+                onChange={update("installation_type")}
                 required
                 className="w-full rounded-lg bg-ink border border-border px-3 py-2 text-text font-body text-sm outline-none focus:border-amber transition-colors"
               >
-                <option value="" disabled>Select a category…</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
+                <option value="" disabled>Select…</option>
+                <option value="installation">Installation</option>
+                <option value="no_installation">No Installation</option>
               </select>
             </label>
 
